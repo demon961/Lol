@@ -1,0 +1,308 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #e3f2fd;
+    }
+    .game-container {
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #1976d2;
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      background-color: #f4f4f9;
+      border: 2px solid #ccc;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+    .cell.X {
+      color: #ff6347;
+    }
+    .cell.O {
+      color: #4682b4;
+    }
+    .cell.disabled {
+      pointer-events: none;
+      background-color: #e0e0e0;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px;
+      border-radius: 5px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    button:active {
+      background-color: #3e8e41;
+    }
+    #game-history {
+      margin-top: 20px;
+      max-width: 200px;
+      text-align: left;
+      margin: 0 auto;
+    }
+    #winnerMessage {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .winning-line {
+      background-color: #ffeb3b;
+      color: #000;
+      font-weight: bold;
+    }
+    .game-over-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 1.5rem;
+    }
+    .game-over-modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background-color: #2196f3;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .modal-content button {
+      background-color: #f44336;
+    }
+    @media screen and (max-width: 600px) {
+      .board {
+        grid-template-columns: repeat(3, 80px);
+        grid-template-rows: repeat(3, 80px);
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <h1>Tic-Tac-Toe</h1>
+
+    <div>
+      <label for="player1">Player 1 (X): </label>
+      <input type="text" id="player1" placeholder="Enter name" /><br>
+      <label for="player2">Player 2 (O): </label>
+      <input type="text" id="player2" placeholder="Enter name" />
+    </div>
+   
+    <div id="winnerMessage"></div>
+
+    <div class="board" id="board">
+      <div class="cell" data-index="0"></div>
+      <div class="cell" data-index="1"></div>
+      <div class="cell" data-index="2"></div>
+      <div class="cell" data-index="3"></div>
+      <div class="cell" data-index="4"></div>
+      <div class="cell" data-index="5"></div>
+      <div class="cell" data-index="6"></div>
+      <div class="cell" data-index="7"></div>
+      <div class="cell" data-index="8"></div>
+    </div>
+
+    <button onclick="startGame()">Start Game</button>
+    <button onclick="resetGame()">Restart Game</button>
+
+    <div id="game-history"></div>
+  </div>
+
+  <div class="game-over-modal" id="gameOverModal">
+    <div class="modal-content">
+      <p id="gameOverMessage"></p>
+      <button onclick="resetGame()">Restart Game</button>
+    </div>
+  </div>
+
+  <script>
+    let currentPlayer = 'X';
+    let gameBoard = ['', '', '', '', '', '', '', '', ''];
+    let gameOver = false;
+    let player1 = 'Player 1';
+    let player2 = 'Player 2';
+    let gameHistory = [];
+    let isAI = false;
+
+    const boardElement = document.getElementById('board');
+    const winnerMessage = document.getElementById('winnerMessage');
+    const historyElement = document.getElementById('game-history');
+    const gameOverModal = document.getElementById('gameOverModal');
+    const gameOverMessage = document.getElementById('gameOverMessage');
+
+    function startGame() {
+      player1 = document.getElementById('player1').value || 'Player 1';
+      player2 = document.getElementById('player2').value || 'Player 2';
+      gameBoard = ['', '', '', '', '', '', '', '', ''];
+      currentPlayer = 'X';
+      gameOver = false;
+      gameHistory = [];
+      isAI = document.getElementById('player2').value === 'AI';
+      winnerMessage.textContent = '';
+      historyElement.innerHTML = '';
+      resetBoard();
+    }
+
+    function resetGame() {
+      gameBoard = ['', '', '', '', '', '', '', '', ''];
+      currentPlayer = 'X';
+      gameOver = false;
+      winnerMessage.textContent = '';
+      historyElement.innerHTML = '';
+      gameOverModal.classList.remove('active');
+      resetBoard();
+    }
+
+    function resetBoard() {
+      const cells = document.querySelectorAll('.cell');
+      cells.forEach(cell => {
+        cell.textContent = '';
+        cell.classList.remove('disabled', 'winning-line', 'X', 'O');
+      });
+    }
+
+    function checkWinner() {
+      const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+
+      for (const pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+          return pattern;
+        }
+      }
+      return null;
+    }
+
+    function displayHistory() {
+      historyElement.innerHTML = 'Moves:<br>' + gameHistory.join('<br>');
+    }
+
+    function handleClick(event) {
+      const index = event.target.dataset.index;
+      if (gameBoard[index] || gameOver) return;
+
+      gameBoard[index] = currentPlayer;
+      event.target.textContent = currentPlayer;
+      event.target.classList.add('disabled', currentPlayer);
+
+      gameHistory.push(`${currentPlayer} moved at ${index + 1}`);
+      displayHistory();
+
+      const winnerPattern = checkWinner();
+      if (winnerPattern) {
+        highlightWinningLine(winnerPattern);
+        gameOverMessage.textContent = `${currentPlayer === 'X' ? player1 : player2} Wins!`;
+        gameOverModal.classList.add('active');
+        gameOver = true;
+      } else if (gameBoard.every(cell => cell)) {
+        gameOverMessage.textContent = 'It\'s a Tie!';
+        gameOverModal.classList.add('active');
+        gameOver = true;
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        if (isAI && currentPlayer === 'O') {
+          aiMove();
+        }
+      }
+    }
+
+    function highlightWinningLine(pattern) {
+      pattern.forEach(index => {
+        document.querySelectorAll('.cell')[index].classList.add('winning-line');
+      });
+    }
+
+    function aiMove() {
+      let availableMoves = [];
+      gameBoard.forEach((cell, index) => {
+        if (!cell) availableMoves.push(index);
+      });
+
+      const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+      gameBoard[randomMove] = 'O';
+      document.querySelectorAll('.cell')[randomMove].textContent = 'O';
+      document.querySelectorAll('.cell')[randomMove].classList.add('disabled', 'O');
+      gameHistory.push(`AI moved at ${randomMove + 1}`);
+      displayHistory();
+
+      const winnerPattern = checkWinner();
+      if (winnerPattern) {
+        highlightWinningLine(winnerPattern);
+        gameOverMessage.textContent = `AI (${player2}) Wins!`;
+        gameOverModal.classList.add('active');
+        gameOver = true;
+      } else if (gameBoard.every(cell => cell)) {
+        gameOverMessage.textContent = 'It\'s a Tie!';
+        gameOverModal.classList.add('active');
+        gameOver = true;
+      } else {
+        currentPlayer = 'X';
+      }
+    }
+
+    boardElement.addEventListener('click', event => {
+      if (event.target.classList.contains('cell')) {
+        handleClick(event);
+      }
+    });
+  </script>
+
+</body>
+</html>
